@@ -81,3 +81,17 @@
 - 通过分类和关联功能，为大规模企业微信应用管理提供了基础。
 
 总的来说，`wecom_application.py` 文件为整个 WeChat Work 集成套件提供了核心的应用管理功能，是其他所有相关功能模块的基础和中心。
+
+===============================================================================================================
+
+
+wizards/wecom_sync_wizard.py:
+如果你需要实现数据同步向导，可以添加这个文件。
+security/wecom_security.xml:
+定义与WeChat Work集成相关的安全规则和访问权限。
+security/ir.model.access.csv:
+定义模型的访问权限。
+views/ 目录:
+包含各个模型对应的视图文件，如 wecom_application_views.xml, wecom_webhook_views.xml 等。
+data/ 目录:
+包含初始化数据，如 wecom_app_type_data.xml。
