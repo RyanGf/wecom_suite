@@ -6,53 +6,53 @@ from odoo.tools.cache import ormcache
 
 class WeComApplication(models.Model):
     """
-    WeChat Work Application Model
-    This model represents a WeChat Work application within Odoo.
+    企业微信应用模型
+    此模型表示Odoo中的企业微信应用。
     """
     _name = "wecom.application"
-    _description = "WeChat Work Application"
+    _description = "企业微信应用"
     _inherit = ['wecom.base']
     _order = "sequence, id"
 
-    name = fields.Char(compute="_compute_name", store=True, index=True, help="Full name of the application")
-    app_name = fields.Char(required=True, translate=True, help="Name of the application")
-    company_id = fields.Many2one("res.company", required=True, domain=[('is_wecom_organization', '=', True)], help="Company this application belongs to")
-    type_id = fields.Many2one("wecom.app.type", required=True, help="Type of the application")
-    category_ids = fields.Many2many("wecom.app.category", string="Categories", help="Categories this application belongs to")
-    agent_id = fields.Integer(required=True, help="WeChat Work agent ID")
-    secret = fields.Char(required=True, help="Application secret")
-    sequence = fields.Integer(default=10, help="Sequence for ordering")
+    name = fields.Char(compute="_compute_name", store=True, index=True, help="应用的完整名称")
+    app_name = fields.Char(required=True, translate=True, help="应用名称")
+    company_id = fields.Many2one("res.company", required=True, domain=[('is_wecom_organization', '=', True)], help="应用所属的公司")
+    type_id = fields.Many2one("wecom.app.type", required=True, help="应用类型")
+    category_ids = fields.Many2many("wecom.app.category", string="分类", help="应用所属的分类")
+    agent_id = fields.Integer(required=True, help="企业微信应用的AgentID")
+    secret = fields.Char(required=True, help="应用的Secret")
+    sequence = fields.Integer(default=10, help="用于排序的序号")
 
-    webhook_ids = fields.One2many("wecom.app.webhook", "app_id", string="Webhooks", help="Webhooks associated with this application")
-    setting_ids = fields.One2many("wecom.app.settings", "app_id", string="Settings", help="Settings for this application")
+    webhook_ids = fields.One2many("wecom.app.webhook", "app_id", string="Webhooks", help="与此应用关联的Webhooks")
+    setting_ids = fields.One2many("wecom.app.settings", "app_id", string="设置", help="此应用的设置")
 
     _sql_constraints = [
-        ("company_app_name_uniq", "unique (company_id, app_name)", _("The application name must be unique per company!")),
-        ("company_agent_id_uniq", "unique (company_id, agent_id)", _("The Agent ID must be unique per company!"))
+        ("company_app_name_uniq", "unique (company_id, app_name)", _("同一公司内应用名称必须唯一!")),
+        ("company_agent_id_uniq", "unique (company_id, agent_id)", _("同一公司内AgentID必须唯一!"))
     ]
 
     @api.depends('company_id', 'app_name', 'type_id')
     def _compute_name(self):
-        """Compute the full name of the application"""
+        """计算应用的完整名称"""
         for app in self:
             app.name = f"{app.company_id.name}/{app.type_id.name}/{app.app_name}"
 
     @api.constrains('agent_id')
     def _check_agent_id(self):
-        """Ensure agent_id is a positive integer"""
+        """确保agent_id是正整数"""
         for app in self:
             if app.agent_id <= 0:
-                raise ValidationError(_("Agent ID must be a positive integer."))
+                raise ValidationError(_("AgentID必须是正整数。"))
 
     @api.model
     def create(self, vals):
-        """Override create to clear cache"""
+        """重写create方法以清除缓存"""
         res = super(WeComApplication, self).create(vals)
         self.clear_caches()
         return res
 
     def write(self, vals):
-        """Override write to clear cache"""
+        """重写write方法以清除缓存"""
         res = super(WeComApplication, self).write(vals)
         self.clear_caches()
         return res
@@ -60,34 +60,34 @@ class WeComApplication(models.Model):
     @ormcache('self.id')
     def get_access_token(self):
         """
-        Get the access token for this application
-        This method is cached for performance
+        获取此应用的访问令牌
+        为了提高性能,此方法使用了缓存
         """
-        # TODO: Implement actual token retrieval logic
+        # TODO: 实现实际的令牌获取逻辑
         return "sample_token"
 
     def refresh_app_info(self):
-        """Refresh application information from WeChat Work"""
+        """从企业微信刷新应用信息"""
         self.ensure_one()
         try:
-            # TODO: Implement app info refresh logic
-            self._logger.info(f"Refreshed info for app: {self.name}")
+            # TODO: 实现应用信息刷新逻辑
+            self._logger.info(f"已刷新应用的信息: {self.name}")
         except Exception as e:
-            self.log_error(f"Failed to refresh app info: {str(e)}")
-            raise ValidationError(_("Failed to refresh application information. Please try again later."))
+            self.log_error(f"刷新应用信息失败: {str(e)}")
+            raise ValidationError(_("刷新应用信息失败。请稍后再试。"))
 
     @api.model
     def cron_refresh_all_apps(self):
-        """Cron job to refresh all applications"""
+        """刷新所有应用的定时任务"""
         apps = self.search([])
         for app in apps:
             try:
                 app.refresh_app_info()
             except Exception as e:
-                self._logger.error(f"Failed to refresh app {app.name}: {str(e)}")
+                self._logger.error(f"刷新应用失败 {app.name}: {str(e)}")
 
     def action_view_webhooks(self):
-        """Action to view related webhooks"""
+        """查看相关Webhooks的动作"""
         self.ensure_one()
         return {
             'name': _('Webhooks'),
